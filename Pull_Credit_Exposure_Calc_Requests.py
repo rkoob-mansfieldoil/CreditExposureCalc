@@ -8,8 +8,8 @@ import re
 # =========================================================
 # CREDENTIALS CONFIGURATION - MODIFY AS NEEDED
 # =========================================================
-# HubSpot API Bearer Token
-HUBSPOT_BEARER_TOKEN = "XXX"  # Replace with your actual token
+# HubSpot API Bearer Token - now retrieved from Windows Credential Manager
+HUBSPOT_CREDENTIAL_NAME = "HubSpot Sandbox"  # Windows Credential Manager name for HubSpot token
 
 # SQL Server Connection Parameters
 SQL_SERVER = "entradev6db.database.windows.net"  # SQL Server address
@@ -20,6 +20,27 @@ SQL_TABLE_NAME = "Credit_Exposure_Calc"      # Replace with your actual table na
 
 # Enable debugging
 DEBUG = False
+
+def get_hubspot_bearer_token():
+    """Get HubSpot bearer token from Windows Credential Manager"""
+    try:
+        credential = keyring.get_credential(HUBSPOT_CREDENTIAL_NAME, None)
+        
+        if credential is None:
+            print(f"Error: No credentials found for '{HUBSPOT_CREDENTIAL_NAME}' in Windows Credential Manager")
+            return None
+            
+        # The bearer token should be stored as the password
+        bearer_token = credential.password
+        
+        if not bearer_token:
+            print(f"Error: No password (bearer token) found for '{HUBSPOT_CREDENTIAL_NAME}' in Windows Credential Manager")
+            return None
+            
+        return bearer_token
+    except Exception as e:
+        print(f"Error retrieving HubSpot bearer token from Windows Credential Manager: {e}")
+        return None
 
 class HubspotAPI:
     def __init__(self, bearer_token: str):
@@ -451,8 +472,14 @@ def prepare_sql_data(exposure_object, associated_deals):
     return sql_rows
 
 def main():
-    # Use hard-coded bearer token
-    api = HubspotAPI(HUBSPOT_BEARER_TOKEN)
+    # Get HubSpot bearer token from Windows Credential Manager
+    bearer_token = get_hubspot_bearer_token()
+    if not bearer_token:
+        print("Failed to retrieve HubSpot bearer token. Exiting.")
+        return
+    
+    # Use bearer token from Windows Credential Manager
+    api = HubspotAPI(bearer_token)
     
     # Define properties to fetch
     custom_object_properties = [
