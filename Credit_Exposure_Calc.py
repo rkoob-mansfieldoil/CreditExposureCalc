@@ -89,6 +89,9 @@ STATE_TO_HUB = FlexibleStateDict({
     "Ohio": "chi",
     "Iowa": "chi",
     "Missouri": "chi",
+    #-------UPDATED---------
+    "Nebraska": "chi",
+    #-------UPDATED---------
     
     # SoCal states
     "California": "socal",
@@ -380,10 +383,10 @@ data_cache = MonthlyDataCache()
 @lru_cache(maxsize=1)
 def get_db_engine():
     """Cached database connection to avoid repeated connection setup"""
-    username = keyring.get_password("EntradeDB", "username")
-    password = keyring.get_password("EntradeDB", "password")
-    server = 'entradev6dbprod.database.windows.net'
-    database = 'EntradeMPGPROD'
+    username = keyring.get_password("EntradeDBProd", "username")
+    password = keyring.get_password("EntradeDBProd", "password")
+    server = 'entradev6dbprod.database.windows.net'  # HARDCODED
+    database = 'EntradeMPGPROD'  # HARDCODED
     conn_str = (
         f"mssql+pyodbc://{username}:{password}@{server}:1433/{database}"
         "?driver=ODBC+Driver+17+for+SQL+Server"
@@ -399,19 +402,12 @@ def get_db_engine():
 def get_inputs_db_engine(service_name="EntradeDev"):
     """
     Create engine for the inputs DB using keyring entries.
-    Expects keyring service with:
-      - username (keyring.get_password(service_name, "username"))
-      - password (keyring.get_password(service_name, "password"))
-      - server   (keyring.get_password(service_name, "server"))  -- optional; fallback below
-      - database (keyring.get_password(service_name, "database"))-- optional; fallback below
-
-    If server/database are not in keyring, default placeholders are used and you'll
-    need to change them here or store them in keyring.
+    Only gets username/password from keyring, server/database are hardcoded.
     """
-    username = keyring.get_password("EntradeDev", "username")
-    password = keyring.get_password("EntradeDev", "password")
-    server = 'entradev6db.database.windows.net'
-    database = 'MPGAPIDB'
+    username = keyring.get_password(service_name, "username")
+    password = keyring.get_password(service_name, "password")
+    server = 'entradev6db.database.windows.net'  # HARDCODED
+    database = 'MPGAPIDB'  # HARDCODED
     if username is None or password is None:
         raise RuntimeError(f"Keyring entries for {service_name} are missing. Please add them.")
     conn_str = (
